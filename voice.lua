@@ -1,4 +1,4 @@
--- [[ XENO ALL-IN-ONE: VOICE + WASD FLY + FE INVISIBLE ]] --
+-- [[ FE INVISIBLE + WASD FLY + VOICE DISTORTER ]] --
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local Mouse = LP:GetMouse()
@@ -8,54 +8,44 @@ local ScreenGui = Instance.new("ScreenGui", LP.PlayerGui)
 local MainButton = Instance.new("TextButton", ScreenGui)
 MainButton.Size = UDim2.new(0, 150, 0, 50)
 MainButton.Position = UDim2.new(0, 10, 0.5, 0)
-MainButton.Text = "Invisible: OFF"
+MainButton.Text = "FE Invisible: OFF"
 MainButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 MainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MainButton.Active = true
 MainButton.Draggable = true 
+MainButton.Active = true
 
--- === PART 2: FE INVISIBLE LOGIC ===
+-- === PART 2: THE REAL FE INVISIBLE (UNDERWORLD GLITCH) ===
 local isInvisible = false
+local savedC0 = nil
 
 MainButton.MouseButton1Click:Connect(function()
     local char = LP.Character
-    if not char then return end
+    if not char or not char:FindFirstChild("LowerTorso") then return end
+    local rootJoint = char.LowerTorso:FindFirstChild("RootIt") or char.LowerTorso:FindFirstChild("Root")
     
+    if not rootJoint then return end
     isInvisible = not isInvisible
     
     if isInvisible then
-        MainButton.Text = "Invisible: ON"
+        MainButton.Text = "FE Invisible: ON"
         MainButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
         
-        -- Ginagawang transparent lahat ng parte ng katawan
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") or part:IsA("Decal") then
-                if part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 1
-                end
-            end
-        end
-        -- Tinatago ang Face at Accessories
-        if char:FindFirstChild("Head") and char.Head:FindFirstChild("face") then
-            char.Head.face.Transparency = 1
-        end
+        -- Itatago ang buong character model sa -50,000 blocks sa ilalim
+        savedC0 = rootJoint.C0
+        rootJoint.C0 = rootJoint.C0 * CFrame.new(0, 50000, 0) 
+        -- Mawawala ka sa paningin ng iba pati nametag mo sasama sa ilalim
     else
-        MainButton.Text = "Invisible: OFF"
+        MainButton.Text = "FE Invisible: OFF"
         MainButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         
-        -- Binabalik sa normal
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") or part:IsA("Decal") then
-                part.Transparency = 0
-            end
-        end
-        if char:FindFirstChild("Head") and char.Head:FindFirstChild("face") then
-            char.Head.face.Transparency = 0
+        -- Ibabalik ang character sa normal
+        if savedC0 then
+            rootJoint.C0 = savedC0
         end
     end
 end)
 
--- === PART 3: VOICE DISTORTER ===
+-- === PART 3: VOICE PROTECTOR ===
 local function applyVoice(char)
     task.wait(1)
     local mic = char:FindFirstChildOfClass("AudioDeviceInput") or char.PrimaryPart:FindFirstChildOfClass("AudioDeviceInput")
