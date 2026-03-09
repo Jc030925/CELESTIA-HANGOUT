@@ -1,87 +1,75 @@
--- [[ JOINT SCRIPT: VOICE DISTORTER + FLY (F) ]] --
+-- [[ UPDATED: STABLE FLY + VOICE DISTORTER ]] --
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local Mouse = LP:GetMouse()
 
 -- === PART 1: VOICE DISTORTER (ANTI-AI) ===
-local function applyVoiceEffects(char)
+local function applyVoice(char)
     task.wait(1)
     local mic = char:FindFirstChildOfClass("AudioDeviceInput") or char.PrimaryPart:FindFirstChildOfClass("AudioDeviceInput")
-    
     if mic then
-        -- Tatanggalin ang lumang effects para hindi mag-stack
-        for _, v in pairs(mic:GetChildren()) do
-            if v:IsA("AudioPitchShifter") or v:IsA("AudioCompressor") then v:Destroy() end
-        end
-
-        -- Random Pitch (Para malito ang AI)
         local shifter = Instance.new("AudioPitchShifter")
         shifter.Pitch = 0.94 + (math.random() * 0.12)
         shifter.Parent = mic
         
-        -- Compressor (Para hindi ma-flag sa "Loud/Disruptive Audio")
         local comp = Instance.new("AudioCompressor")
         comp.Threshold = -10
         comp.Parent = mic
-        
-        print("Voice Distortion Active | Pitch: " .. shifter.Pitch)
+        print("Voice Distortion Active")
     end
 end
 
--- === PART 2: FLY SYSTEM (TOGGLE: F) ===
+-- === PART 2: STABLE FLY (NO TALSICK) ===
 local flying = false
-local flySpeed = 50
+local speed = 50
+local flyPart = nil
 
 local function toggleFly()
     local char = LP.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
     local root = char.HumanoidRootPart
     local hum = char:FindFirstChildOfClass("Humanoid")
-    
+
     flying = not flying
-    
+
     if flying then
-        local bv = Instance.new("BodyVelocity")
-        bv.Name = "XenoFlyVel"
-        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bv.Velocity = Vector3.new(0,0,0)
-        bv.Parent = root
-        
-        local bg = Instance.new("BodyGyro")
-        bg.Name = "XenoFlyGyro"
-        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        bg.P = 9000
-        bg.CFrame = root.CFrame
-        bg.Parent = root
-        
         hum.PlatformStand = true
+        -- Gagawa tayo ng "FlyPart" para stable ang position
+        flyPart = Instance.new("BodyVelocity")
+        flyPart.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        flyPart.Velocity = Vector3.new(0,0,0)
+        flyPart.Name = "StableFly"
+        flyPart.Parent = root
         
+        local gyro = Instance.new("BodyGyro")
+        gyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        gyro.P = 10000
+        gyro.Name = "StableGyro"
+        gyro.Parent = root
+
         task.spawn(function()
             while flying do
-                bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * flySpeed
-                bg.CFrame = workspace.CurrentCamera.CFrame
+                -- Susunod sa Camera pero hindi mag-vibrate/talsik
+                local direction = workspace.CurrentCamera.CFrame.LookVector
+                flyPart.Velocity = direction * speed
+                gyro.CFrame = workspace.CurrentCamera.CFrame
                 task.wait()
             end
         end)
-        print("Fly Enabled (F)")
+        print("Fly ON (Stable)")
     else
-        if root:FindFirstChild("XenoFlyVel") then root.XenoFlyVel:Destroy() end
-        if root:FindFirstChild("XenoFlyGyro") then root.XenoFlyGyro:Destroy() end
+        -- Clean up para bumalik sa normal
         hum.PlatformStand = false
-        print("Fly Disabled (F)")
+        if root:FindFirstChild("StableFly") then root.StableFly:Destroy() end
+        if root:FindFirstChild("StableGyro") then root.StableGyro:Destroy() end
+        print("Fly OFF")
     end
 end
 
--- === KEYBOARD DETECTION ===
+-- Keybind F
 Mouse.KeyDown:Connect(function(key)
-    if key:lower() == "f" then
-        toggleFly()
-    end
+    if key:lower() == "f" then toggleFly() end
 end)
 
--- === INITIALIZE ===
-LP.CharacterAdded:Connect(applyVoiceEffects)
-if LP.Character then applyVoiceEffects(LP.Character) end
-
-print("Script Loaded: Voice Distorter & Fly Toggle (F)")
+LP.CharacterAdded:Connect(applyVoice)
+if LP.Character then applyVoice(LP.Character) end
