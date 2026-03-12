@@ -1,9 +1,9 @@
--- [[ GOD MODE + COOLDOWN BYPASS + TRAIN SNIPER ]] --
+-- [[ NUCLEAR GOD MODE + TRAIN SNIPER ]] --
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
 
--- Remote path base sa Dex mo kanina
+-- Remote path
 local trainRemote = RS:WaitForChild("Remote"):WaitForChild("TrainSystem"):WaitForChild("ReqClickTrain")
 
 -- === UI SETUP ===
@@ -11,7 +11,7 @@ local ScreenGui = Instance.new("ScreenGui", LP.PlayerGui)
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 180, 0, 110)
 MainFrame.Position = UDim2.new(0, 10, 0.4, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.Draggable = true
 MainFrame.Active = true
 
@@ -26,53 +26,51 @@ local function createBtn(name, pos, color)
     return b
 end
 
-local godBtn = createBtn("GOD MODE: OFF", UDim2.new(0, 5, 0, 5), Color3.fromRGB(150, 0, 0))
-local trainBtn = createBtn("NO COOLDOWN: OFF", UDim2.new(0, 5, 0, 55), Color3.fromRGB(0, 100, 200))
+local godBtn = createBtn("GHOST GOD: OFF", UDim2.new(0, 5, 0, 5), Color3.fromRGB(100, 0, 0))
+local trainBtn = createBtn("OP TRAIN: OFF", UDim2.new(0, 5, 0, 55), Color3.fromRGB(0, 80, 180))
 
--- === GOD MODE LOGIC (Anti 1-Hit) ===
-local godEnabled = false
+-- === GHOST GOD MODE (Hitbox Destroyer) ===
+local ghostEnabled = false
 godBtn.MouseButton1Click:Connect(function()
-    godEnabled = not godEnabled
-    godBtn.Text = godEnabled and "GOD MODE: ON" or "GOD MODE: OFF"
-    godBtn.BackgroundColor3 = godEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    ghostEnabled = not ghostEnabled
+    godBtn.Text = ghostEnabled and "GHOST GOD: ON" or "GHOST GOD: OFF"
+    godBtn.BackgroundColor3 = ghostEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(100, 0, 0)
     
-    task.spawn(function()
-        while godEnabled do
-            pcall(function()
-                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-                    -- Pinipilit nating laging 506+ ang HP
-                    LP.Character.Humanoid.Health = LP.Character.Humanoid.MaxHealth
-                    -- Bawal mamatay state
-                    LP.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    if ghostEnabled then
+        local char = LP.Character
+        if char then
+            -- Itatago natin ang HumanoidRootPart sa server
+            for _, v in pairs(char:GetChildren()) do
+                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                    v.CanTouch = false -- Hindi ka na matatamaan ng attacks
                 end
-            end)
-            task.wait()
+            end
+            -- Anti-Void protection
+            char.HumanoidRootPart.Anchored = false
         end
-    end)
+    end
 end)
 
--- === COOLDOWN BYPASS LOGIC ===
-local noCooldown = false
+-- === OP TRAIN (Adaptive Spam) ===
+local training = false
 trainBtn.MouseButton1Click:Connect(function()
-    noCooldown = not noCooldown
-    trainBtn.Text = noCooldown and "NO COOLDOWN: ON" or "NO COOLDOWN: OFF"
-    trainBtn.BackgroundColor3 = noCooldown and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(0, 100, 200)
+    training = not training
+    trainBtn.Text = training and "OP TRAIN: ON" or "OP TRAIN: OFF"
+    trainBtn.BackgroundColor3 = training and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(0, 80, 180)
     
-    -- Ito ang "Hook" na tatanggal sa wait ng TrainSystemClient
-    local oldWait
-    oldWait = hookfunction(getrenv().task.wait, function(n)
-        if noCooldown and n and n > 0 then
-            return oldWait(0) -- Gagawing zero seconds lahat ng cooldown
-        end
-        return oldWait(n)
-    end)
-
     task.spawn(function()
-        while noCooldown do
+        while training do
             pcall(function()
+                -- I-fire ang Remote
                 trainRemote:FireServer()
+                
+                -- Isabay natin ang local click animation para "legit" tignan
+                local tool = LP.Character:FindFirstChildOfClass("Tool")
+                if tool then tool:Activate() end
             end)
-            task.wait(0.001) -- Sobrang bilis na spam
+            
+            -- Binagalan natin konti (0.07) para hindi ma-flag ng server anticheat
+            task.wait(0.07) 
         end
     end)
 end)
