@@ -1,10 +1,12 @@
--- [[ CUSTOM CHAR GOD MODE + ADAPTIVE TRAIN ]] --
+-- [[ GOD MODE + ULTRA SPEED BYPASS ]] --
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
+local SPlayer = game:GetService("StarterPlayer")
 
--- Remote path
+-- Paths base sa screenshots mo
 local trainRemote = RS:WaitForChild("Remote"):WaitForChild("TrainSystem"):WaitForChild("ReqClickTrain")
+local speedRemote = RS:WaitForChild("Remote"):WaitForChild("TrainSystem"):WaitForChild("ReqUpdateTrainSpeed")
 
 -- === UI SETUP ===
 local ScreenGui = Instance.new("ScreenGui", LP.PlayerGui)
@@ -26,33 +28,27 @@ local function createBtn(name, pos, color)
     return b
 end
 
-local godBtn = createBtn("FORCE GOD: OFF", UDim2.new(0, 5, 0, 5), Color3.fromRGB(100, 0, 0))
-local trainBtn = createBtn("AUTO TRAIN: OFF", UDim2.new(0, 5, 0, 55), Color3.fromRGB(0, 80, 180))
+local godBtn = createBtn("ANTI 1-HIT: OFF", UDim2.new(0, 5, 0, 5), Color3.fromRGB(120, 0, 0))
+local trainBtn = createBtn("INSTANT TRAIN: OFF", UDim2.new(0, 5, 0, 55), Color3.fromRGB(0, 100, 200))
 
--- === CUSTOM GOD MODE LOGIC ===
+-- === ANTI 1-HIT LOGIC ===
 local godActive = false
 godBtn.MouseButton1Click:Connect(function()
     godActive = not godActive
-    godBtn.Text = godActive and "FORCE GOD: ON" or "FORCE GOD: OFF"
-    godBtn.BackgroundColor3 = godActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(100, 0, 0)
+    godBtn.Text = godActive and "ANTI 1-HIT: ON" or "ANTI 1-HIT: OFF"
+    godBtn.BackgroundColor3 = godActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(120, 0, 0)
     
+    -- Pag-disable sa CombatCalcClient na nakita mo sa Dex
+    local combatScript = LP.PlayerScripts:FindFirstChild("CombatCalcClient", true)
+    if combatScript then
+        combatScript.Disabled = godActive
+    end
+
     task.spawn(function()
         while godActive do
             pcall(function()
-                local char = LP.Character
-                if char then
-                    -- 1. I-refill lahat ng posibleng Health values
-                    for _, v in pairs(char:GetDescendants()) do
-                        if v:IsA("NumberValue") or v:IsA("IntValue") then
-                            if v.Name:lower():find("health") or v.Name:lower():find("hp") then
-                                v.Value = 999999 -- Gawing overkill ang HP value
-                            end
-                        end
-                    end
-                    -- 2. I-disable ang joints breaking
-                    if char:FindFirstChildOfClass("Humanoid") then
-                        char.Humanoid.Health = char.Humanoid.MaxHealth
-                    end
+                if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+                    LP.Character.Humanoid.Health = LP.Character.Humanoid.MaxHealth
                 end
             end)
             task.wait(0.1)
@@ -60,19 +56,25 @@ godBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- === AUTO TRAIN (Safe Loop) ===
+-- === INSTANT TRAIN LOGIC ===
 local training = false
 trainBtn.MouseButton1Click:Connect(function()
     training = not training
-    trainBtn.Text = training and "AUTO TRAIN: ON" or "AUTO TRAIN: OFF"
-    trainBtn.BackgroundColor3 = training and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(0, 80, 180)
+    trainBtn.Text = training and "INSTANT TRAIN: ON" or "INSTANT TRAIN: OFF"
+    trainBtn.BackgroundColor3 = training and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(0, 100, 200)
     
     task.spawn(function()
         while training do
             pcall(function()
+                -- Sabay na pag-fire sa Click at Speed remotes para i-force ang bar
                 trainRemote:FireServer()
+                speedRemote:FireServer()
+                
+                -- Trigger Frenzy Mode multiplier kung available
+                local frenzy = RS.Remote.TrainSystem:FindFirstChild("ResEnterFrenzyMode")
+                if frenzy then frenzy:FireServer() end
             end)
-            task.wait(0.1) -- Binagalan natin para hindi ma-kick ng server-side anticheat
+            task.wait(0.01) -- Pinakamabilis na safe spam
         end
     end)
 end)
