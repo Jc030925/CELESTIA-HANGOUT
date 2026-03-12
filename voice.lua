@@ -1,4 +1,4 @@
--- [[ MVS DUELS: STICKY SMOOTH AIM + TEAM CHECK ]] --
+-- [[ MVS DUELS: STICKY RIGHT-CLICK AIM + ESP ]] --
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -10,15 +10,15 @@ local Settings = {
     Aiming = false,
     ESP = false,
     TeamCheck = true,
-    Smoothness = 0.08, -- Mas binabaan ko para mas mabilis humabol (Sticky)
-    FOV = 180
+    Smoothness = 0.2, -- Mas mataas = mas mahigpit ang kapit sa target
+    FOV = 200 -- Mas malaki nang konti para mas madaling sumalo ng target
 }
 
 -- === FOV CIRCLE ===
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
-FOVCircle.Color = Color3.new(1, 1, 1)
-FOVCircle.Transparency = 0.5
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Transparency = 0.4
 FOVCircle.Visible = true
 FOVCircle.Radius = Settings.FOV
 
@@ -84,16 +84,17 @@ end
 RunService.RenderStepped:Connect(function()
     FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
     
+    -- Mag-lo-lock lang kapag naka-ON ang button AT naka-hold ang Right Click
     if Settings.Aiming and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local target = getTarget()
         if target then
-            -- Sticky Interpolation
+            -- Mas mabilis na lerp para "dikit" sa target
             local lookAt = CFrame.new(Camera.CFrame.Position, target.Position)
             Camera.CFrame = Camera.CFrame:Lerp(lookAt, Settings.Smoothness)
         end
     end
 
-    -- Persistent ESP
+    -- ESP
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= LP and v.Character then
             local highlight = v.Character:FindFirstChild("Highlight")
