@@ -1,4 +1,4 @@
--- [[ MVS DUELS: STICKY RIGHT-CLICK AIM + ESP ]] --
+-- [[ MVS DUELS: HARD STICKY AIM + ESP ]] --
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -10,15 +10,15 @@ local Settings = {
     Aiming = false,
     ESP = false,
     TeamCheck = true,
-    Smoothness = 0.2, -- Mas mataas = mas mahigpit ang kapit sa target
-    FOV = 200 -- Mas malaki nang konti para mas madaling sumalo ng target
+    Smoothness = 0.6, -- Sobrang higpit na nito, dikit na sa ulo
+    FOV = 250 -- Mas malawak na sakop
 }
 
 -- === FOV CIRCLE ===
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Transparency = 0.4
+FOVCircle.Color = Color3.new(1, 1, 1)
+FOVCircle.Transparency = 0.5
 FOVCircle.Visible = true
 FOVCircle.Radius = Settings.FOV
 
@@ -27,7 +27,7 @@ local ScreenGui = Instance.new("ScreenGui", LP.PlayerGui)
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 180, 0, 100)
 MainFrame.Position = UDim2.new(0, 10, 0.5, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -42,19 +42,19 @@ local function createBtn(text, pos, color)
     return b
 end
 
-local aimBtn = createBtn("STICKY AIM: OFF", UDim2.new(0, 5, 0, 5), Color3.fromRGB(100, 0, 0))
-local espBtn = createBtn("ESP: OFF", UDim2.new(0, 5, 0, 50), Color3.fromRGB(100, 0, 0))
+local aimBtn = createBtn("HARD AIM: OFF", UDim2.new(0, 5, 0, 5), Color3.fromRGB(120, 0, 0))
+local espBtn = createBtn("ESP: OFF", UDim2.new(0, 5, 0, 50), Color3.fromRGB(120, 0, 0))
 
 aimBtn.MouseButton1Click:Connect(function()
     Settings.Aiming = not Settings.Aiming
-    aimBtn.Text = Settings.Aiming and "STICKY AIM: ON" or "STICKY AIM: OFF"
-    aimBtn.BackgroundColor3 = Settings.Aiming and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(100, 0, 0)
+    aimBtn.Text = Settings.Aiming and "HARD AIM: ON" or "HARD AIM: OFF"
+    aimBtn.BackgroundColor3 = Settings.Aiming and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(120, 0, 0)
 end)
 
 espBtn.MouseButton1Click:Connect(function()
     Settings.ESP = not Settings.ESP
     espBtn.Text = Settings.ESP and "ESP: ON" or "ESP: OFF"
-    espBtn.BackgroundColor3 = Settings.ESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(100, 0, 0)
+    espBtn.BackgroundColor3 = Settings.ESP and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(120, 0, 0)
 end)
 
 -- === GET TARGET ===
@@ -64,7 +64,6 @@ function getTarget()
 
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= LP and v.Character and v.Character:FindFirstChild("Head") then
-            -- Team Check
             if Settings.TeamCheck and v.Team == LP.Team then continue end
             
             local pos, onScreen = Camera:WorldToViewportPoint(v.Character.Head.Position)
@@ -84,11 +83,10 @@ end
 RunService.RenderStepped:Connect(function()
     FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
     
-    -- Mag-lo-lock lang kapag naka-ON ang button AT naka-hold ang Right Click
     if Settings.Aiming and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local target = getTarget()
         if target then
-            -- Mas mabilis na lerp para "dikit" sa target
+            -- PINALAKAS NA TUTOK
             local lookAt = CFrame.new(Camera.CFrame.Position, target.Position)
             Camera.CFrame = Camera.CFrame:Lerp(lookAt, Settings.Smoothness)
         end
@@ -102,7 +100,6 @@ RunService.RenderStepped:Connect(function()
                 if not highlight then
                     local hl = Instance.new("Highlight", v.Character)
                     hl.FillColor = (v.Team == LP.Team) and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)
-                    hl.OutlineColor = Color3.new(1, 1, 1)
                 end
             else
                 if highlight then highlight:Destroy() end
