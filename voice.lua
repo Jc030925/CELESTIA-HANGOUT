@@ -28,7 +28,7 @@ GiveBtn.MouseButton1Click:Connect(function()
             -- Madalas ang mga event ay tumatanggap ng (ItemName, Amount) o (ItemName)
             remote:FireServer(ITEM_NAME)
             remote:FireServer(ITEM_NAME, 1)
-            remote:FireServer(1, ITEM_NAME) -- Minsan baliktad ang order
+            remote:FireServer(100,000, ITEM_NAME) -- Minsan baliktad ang order
             
             found = true
         end
