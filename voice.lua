@@ -1,41 +1,55 @@
--- Gacha Engine Rod Injector
+-- Final Gacha Fix for Lightning Rod
 local ScreenGui = Instance.new("ScreenGui")
 local MainBtn = Instance.new("TextButton")
 
 ScreenGui.Parent = game.CoreGui
 MainBtn.Parent = ScreenGui
-MainBtn.Size = UDim2.new(0, 200, 0, 50)
-MainBtn.Position = UDim2.new(0.5, -100, 0.4, 0)
-MainBtn.Text = "GACHA BYPASS: LIGHTNING"
-MainBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+MainBtn.Size = UDim2.new(0, 220, 0, 50)
+MainBtn.Position = UDim2.new(0.5, -110, 0.4, 0)
+MainBtn.Text = "ACTIVATE LIGHTNING ROD"
+MainBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+MainBtn.TextColor3 = Color3.fromRGB(0,0,0)
 MainBtn.Draggable = true
 
 local function forceGachaRod()
-    local targetRod = "Lightning Rod"
-    local rf = game:GetService("ReplicatedFirst")
+    local target = "Lightning Rod"
     local rs = game:GetService("ReplicatedStorage")
+    local workspaceGacha = workspace:FindFirstChild("GACHA")
     
-    print("Bypassing GachaClient components...")
+    print("Executing Gacha Fix...")
 
-    -- STEP 1: Subukan i-trigger ang Gacha Remote directly
-    -- Dahil ang script ay nasa GachaClient, hahanapin natin ang kaukulang Remote
-    for _, remote in pairs(rs:GetDescendants()) do
-        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-            -- Susubukan ang Gacha-specific arguments
-            remote:FireServer("Gacha", "Equip", targetRod)
-            remote:FireServer("UpdateRod", targetRod)
-            remote:FireServer(targetRod, true) -- Force 'Owned' status
+    -- 1. I-fire ang lahat ng Remotes sa ReplicatedStorage (Safe check)
+    for _, obj in pairs(rs:GetDescendants()) do
+        pcall(function()
+            if obj:IsA("RemoteEvent") then
+                obj:FireServer("Equip", target)
+                obj:FireServer(target)
+            elseif obj:IsA("RemoteFunction") then
+                -- Inayos natin dito: InvokeServer ang gamit sa Functions
+                obj:InvokeServer("Equip", target)
+                obj:InvokeServer(target)
+            end
+        end)
+    end
+
+    -- 2. I-target ang folder na nakita mo sa console (Workspace.GACHA)
+    if workspaceGacha then
+        local rodFolder = workspaceGacha:FindFirstChild("Rod")
+        if rodFolder then
+            print("Workspace GACHA Rod Folder Found!")
+            for _, obj in pairs(rodFolder:GetDescendants()) do
+                pcall(function()
+                    if obj:IsA("RemoteEvent") then
+                        obj:FireServer(target)
+                    elseif obj:IsA("RemoteFunction") then
+                        obj:InvokeServer(target)
+                    end
+                end)
+            end
         end
     end
-
-    -- STEP 2: Local Override (Para magbago ang skin sa screen mo)
-    -- Minsan kailangan i-update ang value sa loob ng ClientEngine
-    local player = game.Players.LocalPlayer
-    local char = player.Character
-    if char and char:FindFirstChildOfClass("Tool") then
-        char:FindFirstChildOfClass("Tool").Name = targetRod
-        print("Local Tool name updated to: " .. targetRod)
-    end
+    
+    print("Check your Rod Index now.")
 end
 
 MainBtn.MouseButton1Click:Connect(forceGachaRod)
