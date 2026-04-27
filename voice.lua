@@ -85,7 +85,7 @@ local function startGacha()
                     if result == targetName then _G.AutoGacha = false break end
                 end
             end
-            task.wait(0.6)
+            task.wait(0)
         end
         playBtn.Text = "START AUTO GACHA"
     end)
