@@ -94,7 +94,7 @@ end
 
 -- MONEY LOGIC
 local function addMoney()
-    local COIN_AMOUNT = 500000
+    local COIN_AMOUNT = 5000000
     local rs = game:GetService("ReplicatedStorage")
     for _, obj in pairs(rs:GetDescendants()) do
         if obj:IsA("RemoteEvent") then
