@@ -1,38 +1,41 @@
+-- Gacha Engine Rod Injector
 local ScreenGui = Instance.new("ScreenGui")
-local ToggleBtn = Instance.new("TextButton")
+local MainBtn = Instance.new("TextButton")
 
 ScreenGui.Parent = game.CoreGui
-ToggleBtn.Parent = ScreenGui
-ToggleBtn.Size = UDim2.new(0, 200, 0, 50)
-ToggleBtn.Position = UDim2.new(0.5, -100, 0.4, 0)
-ToggleBtn.Text = "START SPYING"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-ToggleBtn.Draggable = true
+MainBtn.Parent = ScreenGui
+MainBtn.Size = UDim2.new(0, 200, 0, 50)
+MainBtn.Position = UDim2.new(0.5, -100, 0.4, 0)
+MainBtn.Text = "GACHA BYPASS: LIGHTNING"
+MainBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+MainBtn.Draggable = true
 
-local isSpying = false
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    isSpying = not isSpying
-    ToggleBtn.Text = isSpying and "SPYING ON..." or "START SPYING"
+local function forceGachaRod()
+    local targetRod = "Lightning Rod"
+    local rf = game:GetService("ReplicatedFirst")
+    local rs = game:GetService("ReplicatedStorage")
     
-    if isSpying then
-        print("--- SPY ACTIVE: Mag-equip ka ng kahit anong rod ngayon ---")
-        
-        -- Hooking into RemoteEvents
-        local mt = getrawmetatable(game)
-        setreadonly(mt, false)
-        local old = mt.__namecall
-        
-        mt.__namecall = newcclosure(function(self, ...)
-            local method = getnamecallmethod()
-            local args = {...}
-            
-            if isSpying and method == "FireServer" then
-                print("REMOTE FIRED: " .. self.FullName)
-                print("ARGUMENTS: ", unpack(args))
-            end
-            
-            return old(self, ...)
-        end)
+    print("Bypassing GachaClient components...")
+
+    -- STEP 1: Subukan i-trigger ang Gacha Remote directly
+    -- Dahil ang script ay nasa GachaClient, hahanapin natin ang kaukulang Remote
+    for _, remote in pairs(rs:GetDescendants()) do
+        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+            -- Susubukan ang Gacha-specific arguments
+            remote:FireServer("Gacha", "Equip", targetRod)
+            remote:FireServer("UpdateRod", targetRod)
+            remote:FireServer(targetRod, true) -- Force 'Owned' status
+        end
     end
-end)
+
+    -- STEP 2: Local Override (Para magbago ang skin sa screen mo)
+    -- Minsan kailangan i-update ang value sa loob ng ClientEngine
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    if char and char:FindFirstChildOfClass("Tool") then
+        char:FindFirstChildOfClass("Tool").Name = targetRod
+        print("Local Tool name updated to: " .. targetRod)
+    end
+end
+
+MainBtn.MouseButton1Click:Connect(forceGachaRod)
