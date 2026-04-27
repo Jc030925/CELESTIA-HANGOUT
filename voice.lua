@@ -1,4 +1,4 @@
--- Roblox Inventory Dupe Script (Lag Method)
+-- Advanced Dupe Button (Remote Focus)
 local ScreenGui = Instance.new("ScreenGui")
 local DupeBtn = Instance.new("TextButton")
 
@@ -6,43 +6,34 @@ ScreenGui.Parent = game.CoreGui
 DupeBtn.Parent = ScreenGui
 DupeBtn.Size = UDim2.new(0, 150, 0, 50)
 DupeBtn.Position = UDim2.new(0.5, -75, 0.4, 0)
-DupeBtn.Text = "DUPE ITEM (EQUIP)"
-DupeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+DupeBtn.Text = "FORCE DUPE ITEM"
+DupeBtn.BackgroundColor3 = Color3.fromRGB(85, 255, 127)
 DupeBtn.Draggable = true
 
--- DITO ANG LOGIC NG PAGPAPADAMI NG ITEM
 DupeBtn.MouseButton1Click:Connect(function()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local itemToDupe = "UnknownCrystal"
     
-    -- Hanapin ang item na hawak mo (Dapat naka-equip ang UnknownCrystal)
-    local item = character:FindFirstChild("UnknownCrystal") or player.Backpack:FindFirstChild("UnknownCrystal")
+    print("Attempting to force dupe...")
+
+    -- Hahanapin natin ang mga common na 'Events' folder sa mga simulator/hangout
+    -- para subukang i-trigger ang "GiveItem" o "Claim" function
+    local events = ReplicatedStorage:FindFirstChild("Events") or ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
     
-    if item then
-        print("Starting inventory dupe for: " .. item.Name)
-        
-        -- STEP 1: Simulan ang matinding LAG
-        settings().Network.IncomingReplicationLag = 999 
-        
-        -- STEP 2: I-spam ang Equip/Unequip/Drop logic
-        -- Ito ang nagpapalito sa server kung nasaan ang item
-        for i = 1, 30 do
-            -- Sinusubukang i-fire ang event ng item habang lag
-            if item:FindFirstChild("RemoteEvent") then -- Maraming items may sariling remote sa loob
-                item.RemoteEvent:FireServer() 
-            end
+    -- Susubukan nating i-fire ang lahat ng posibleng 'Give' remotes
+    -- PAALALA: Kung alam mo ang pangalan ng Remote sa RemoteSpy, ilagay mo rito.
+    for _, remote in pairs(events:GetDescendants()) do
+        if remote:IsA("RemoteEvent") and (remote.Name:find("Give") or remote.Name:find("Claim") or remote.Name:find("Add")) then
+            print("Found potential dupe remote: " .. remote.Name)
             
-            -- I-force unequip at equip
-            item.Parent = player.Backpack
-            task.wait(0.01)
-            item.Parent = character
+            -- I-spam ang remote habang naka-lag
+            settings().Network.IncomingReplicationLag = 999
+            for i = 1, 20 do
+                -- Sinusubukang i-fire ang remote gamit ang name ng item
+                remote:FireServer(itemToDupe)
+            end
+            task.wait(0.5)
+            settings().Network.IncomingReplicationLag = 0
         end
-        
-        -- STEP 3: Sync back to server
-        task.wait(0.5)
-        settings().Network.IncomingReplicationLag = 0
-        print("Dupe attempt finished. Check inventory!")
-    else
-        warn("Dapat naka-equip o nasa Backpack ang UnknownCrystal!")
     end
 end)
