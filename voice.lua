@@ -1,42 +1,34 @@
--- Force Item Generator Script
+-- Stealth Coin Injector (Custom Amount)
 local ScreenGui = Instance.new("ScreenGui")
-local GiveBtn = Instance.new("TextButton")
+local MainBtn = Instance.new("TextButton")
 
 ScreenGui.Parent = game.CoreGui
-GiveBtn.Parent = ScreenGui
-GiveBtn.Size = UDim2.new(0, 200, 0, 50)
-GiveBtn.Position = UDim2.new(0.5, -100, 0.4, 0)
-GiveBtn.Text = "GET UNKNOWN CRYSTAL"
-GiveBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 255) -- Purple Button
-GiveBtn.Draggable = true
+MainBtn.Parent = ScreenGui
+MainBtn.Size = UDim2.new(0, 200, 0, 50)
+MainBtn.Position = UDim2.new(0.5, -100, 0.1, 0)
+MainBtn.Text = "ADD 500,000 COINS"
+MainBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Green for Money
+MainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainBtn.Draggable = true
 
 -- CONFIGURATION
-local ITEM_NAME = "UnknownCrystal" -- Siguraduhin na tama ang spelling
+local COIN_AMOUNT = 500000 -- Dito mo pwede palitan ang amount
 
-GiveBtn.MouseButton1Click:Connect(function()
-    print("Attempting to force-get item: " .. ITEM_NAME)
+local function addMoney()
+    local rs = game:GetService("ReplicatedStorage")
+    local remotesFound = 0
     
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    
-    -- I-scan ang buong ReplicatedStorage para sa mga Events
-    local allRemotes = ReplicatedStorage:GetDescendants()
-    local found = false
-
-    for _, remote in pairs(allRemotes) do
-        if remote:IsA("RemoteEvent") then
-            -- Susubukan nating i-fire ang remote gamit ang pangalan ng crystal
-            -- Madalas ang mga event ay tumatanggap ng (ItemName, Amount) o (ItemName)
-            remote:FireServer(ITEM_NAME)
-            remote:FireServer(ITEM_NAME, 1)
-            remote:FireServer(100,000, ITEM_NAME) -- Minsan baliktad ang order
+    for _, obj in pairs(rs:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            -- Susubukan natin ang iba't ibang format ng pag-send ng coins
+            obj:FireServer(COIN_AMOUNT)
+            obj:FireServer("Coins", COIN_AMOUNT)
+            obj:FireServer("Add", COIN_AMOUNT)
             
-            found = true
+            remotesFound = remotesFound + 1
         end
     end
+    print("Fired " .. remotesFound .. " remotes with amount: " .. COIN_AMOUNT)
+end
 
-    if found then
-        print("All remotes fired. Check your backpack!")
-    else
-        warn("No RemoteEvents found in ReplicatedStorage.")
-    end
-end)
+MainBtn.MouseButton1Click:Connect(addMoney)
