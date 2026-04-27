@@ -1,46 +1,38 @@
--- Lightning Rod Force-Unlock & Equip
 local ScreenGui = Instance.new("ScreenGui")
-local MainBtn = Instance.new("TextButton")
+local ToggleBtn = Instance.new("TextButton")
 
 ScreenGui.Parent = game.CoreGui
-MainBtn.Parent = ScreenGui
-MainBtn.Size = UDim2.new(0, 200, 0, 50)
-MainBtn.Position = UDim2.new(0.5, -100, 0.3, 0)
-MainBtn.Text = "FORCE UNLOCK LIGHTNING"
-MainBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
-MainBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Size = UDim2.new(0, 200, 0, 50)
+ToggleBtn.Position = UDim2.new(0.5, -100, 0.4, 0)
+ToggleBtn.Text = "START SPYING"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+ToggleBtn.Draggable = true
 
-local function forceUnlock()
-    local target = "Lightning Rod"
-    local rs = game:GetService("ReplicatedStorage")
+local isSpying = false
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    isSpying = not isSpying
+    ToggleBtn.Text = isSpying and "SPYING ON..." or "START SPYING"
     
-    print("Executing Force-Unlock Sequence...")
-
-    -- STEP 1: Hanapin ang "Shop" o "Purchase" Remote
-    -- Maraming games ang may butas sa 'Buy' remote kung isesend mo ay 0 na price
-    for _, remote in pairs(rs:GetDescendants()) do
-        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-            -- Susubukan nating lokohin ang purchase system
-            pcall(function()
-                remote:FireServer(target, 0) -- Bilhin ng 0 coins
-                remote:FireServer(target, true) -- I-set ang 'Owned' status sa true
-                remote:FireServer("Buy", target)
-                remote:FireServer("Unlock", target)
-                
-                -- Kung RemoteFunction, kailangan ng Invoke
-                if remote:IsA("RemoteFunction") then
-                    remote:InvokeServer(target)
-                end
-            end)
-        end
+    if isSpying then
+        print("--- SPY ACTIVE: Mag-equip ka ng kahit anong rod ngayon ---")
+        
+        -- Hooking into RemoteEvents
+        local mt = getrawmetatable(game)
+        setreadonly(mt, false)
+        local old = mt.__namecall
+        
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            local args = {...}
+            
+            if isSpying and method == "FireServer" then
+                print("REMOTE FIRED: " .. self.FullName)
+                print("ARGUMENTS: ", unpack(args))
+            end
+            
+            return old(self, ...)
+        end)
     end
-
-    -- STEP 2: Character Refresh
-    -- Minsan kailangan i-reset ang character para lumabas ang bagong skin
-    local player = game.Players.LocalPlayer
-    if player.Character then
-        print("Wait 2 seconds and check your inventory...")
-    end
-end
-
-MainBtn.MouseButton1Click:Connect(forceUnlock)
+end)
