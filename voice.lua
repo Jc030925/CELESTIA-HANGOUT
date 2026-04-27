@@ -1,58 +1,33 @@
-local ScreenGui = Instance.new("ScreenGui")
-local MainBtn = Instance.new("TextButton")
+-- Fast Auto-Gacha (No Animation)
+local rs = game:GetService("ReplicatedStorage")
+local lp = game.Players.LocalPlayer
+local target = "LightningRod"
 
-ScreenGui.Parent = game.CoreGui
-MainBtn.Parent = ScreenGui
-MainBtn.Size = UDim2.new(0, 250, 0, 50)
-MainBtn.Position = UDim2.new(0.5, -125, 0.4, 0)
-MainBtn.Text = "RE-RENDER LIGHTNING ROD"
-MainBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
-MainBtn.Draggable = true
+-- Hanapin ang Remote para sa Gacha base sa GachaResources folder
+local gachaRemote = rs:WaitForChild("GachaResources"):FindFirstChildOfClass("RemoteFunction") 
+    or rs:WaitForChild("GachaResources"):FindFirstChildOfClass("RemoteEvent")
 
-local function reRenderRod()
-    local lp = game.Players.LocalPlayer
-    local char = lp.Character
-    local rs = game:GetService("ReplicatedStorage")
-    local target = "LightningRod"
-    
-    -- 1. Siguraduhin ang Data Path base sa Dex mo
-    local myData = rs.PlayersData:FindFirstChild(lp.Name)
-    if myData and myData:FindFirstChild("FishingData") then
-        myData.FishingData.CurrentRod.Value = target
-        print("Data confirmed.")
-    end
+_G.AutoGacha = true -- Gawing false kung gusto mong itigil
 
-    -- 2. Visual Swap logic
-    -- Hahanapin ang actual model sa Resources folder na nakita natin
-    local rodModel = rs.FishingResources.Rods:FindFirstChild(target)
-    local tool = char:FindFirstChildOfClass("Tool") or lp.Backpack:FindFirstChildOfClass("Tool")
+print("Auto-Gacha Started. Looking for: " .. target)
 
-    if tool and rodModel then
-        -- Tatanggalin natin yung lumang mesh/itsura sa kamay mo
-        for _, v in pairs(tool:GetDescendants()) do
-            if v:IsA("MeshPart") or v:IsA("SpecialMesh") or v:IsA("SelectionBox") then
-                v:Destroy()
-            end
+task.spawn(function()
+    while _G.AutoGacha do
+        -- I-check muna kung nakuha na natin para hindi masayang ang coins
+        local myData = rs.PlayersData:FindFirstChild(lp.Name)
+        if myData and myData.FishingData.Rods:FindFirstChild(target) then
+            print("SUCCESS! LightningRod obtained. Stopping Auto-Gacha.")
+            _G.AutoGacha = false
+            break
         end
 
-        -- Kukunin natin ang itsura ng LightningRod at ilalagay sa kasalukuyan mong tool
-        for _, part in pairs(rodModel:GetChildren()) do
-            local clone = part:Clone()
-            clone.Parent = tool
-            
-            -- I-weld natin sa Handle para sumunod sa galaw ng kamay
-            if clone:IsA("BasePart") or clone:IsA("MeshPart") then
-                local weld = Instance.new("WeldConstraint")
-                weld.Part0 = tool:FindFirstChild("Handle")
-                weld.Part1 = clone
-                weld.Parent = clone
-                clone.CanCollide = false
-            end
+        -- I-trigger ang Gacha nang walang animation
+        if gachaRemote:IsA("RemoteFunction") then
+            gachaRemote:InvokeServer("Roll") -- Depende sa name ng action sa game
+        else
+            gachaRemote:FireServer("Roll")
         end
-        print("Lightning Mesh Applied!")
-    else
-        print("Equip your rod first!")
+        
+        task.wait(0.1) -- Sobrang bilis na draw
     end
-end
-
-MainBtn.MouseButton1Click:Connect(reRenderRod)
+end)
