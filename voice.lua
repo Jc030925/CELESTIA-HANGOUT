@@ -1,4 +1,4 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage") 
 local TeleportService = game:GetService("TeleportService")
 local lp = game.Players.LocalPlayer
 
