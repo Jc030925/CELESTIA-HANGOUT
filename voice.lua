@@ -4,7 +4,7 @@ local lp = game.Players.LocalPlayer
 
 -- Configurations
 local targetRods = {"NexusDivaRod", "NexusAlphaRod", "AngelRod", "SakuraRod", "LightningRod"}
-local targetWings = {"NexusAlphaWings", "NexusDivaWings", "LightningWings", "SakuraWings", "QueenFloraWings"}
+local targetWings = {"LightningWings", "SakuraWings", "QueenFloraWings"}
 local targetSwords = {"SakuraKatana", "NexusAlphaSword", "NexusDivaSword"}
 
 _G.AutoGacha = false
